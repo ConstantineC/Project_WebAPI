@@ -9,8 +9,8 @@ namespace WebAPI.CustomClasses
         {
             public string GetDatabaseDirectory()
             {
-                string databaseDirectory = Environment.CurrentDirectory + "\\Database\\";
-                Console.WriteLine(databaseDirectory);
+                string databaseDirectory = Environment.CurrentDirectory + "\\Databases\\";
+                //Console.WriteLine(databaseDirectory);
                 return databaseDirectory;
             }
 
@@ -52,7 +52,7 @@ namespace WebAPI.CustomClasses
                     "(NAME = " + databaseName + "_Data, " +
                      "FILENAME ='" + directoryPath + databaseName + ".mdf')";
 
-                Console.WriteLine(cmd.CommandText);
+                //Console.WriteLine(cmd.CommandText);
                 try
                 {
                     conn.Open();
