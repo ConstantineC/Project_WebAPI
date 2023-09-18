@@ -16,12 +16,12 @@ namespace WebAPI.CustomClasses
                     if (conn.State == ConnectionState.Closed)
                     {
                         conn.Open();
-                        Console.WriteLine("Opened Connection");
+                        Console.WriteLine("Opened  SQL Server Connection");
                     }
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e.ToString());
+                    Console.WriteLine(e.Message);
                     return null;
                 }
                 return sqlCommand;
@@ -34,12 +34,12 @@ namespace WebAPI.CustomClasses
                     if (conn.State == ConnectionState.Open)
                     {
                         conn.Close();
-                        Console.WriteLine("Closed Connection");
+                        Console.WriteLine("Closed SQL Server Connection");
                     }
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e.ToString());
+                    Console.WriteLine(e.Message);
                 }
             }
 
@@ -70,9 +70,9 @@ namespace WebAPI.CustomClasses
                         "PRIMARY KEY (ID));";
                     cmd.ExecuteNonQuery();
                 }
-                catch (Exception ex)
+                catch (Exception e)
                 {
-                    Console.WriteLine(ex.ToString());
+                    Console.WriteLine(e.Message);
                 }
             }
 
@@ -93,7 +93,7 @@ namespace WebAPI.CustomClasses
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e.ToString());
+                    Console.WriteLine(e.Message);
                 }
                 return exists;
             }
@@ -118,7 +118,7 @@ namespace WebAPI.CustomClasses
                     return return_string;
                 }
                 catch(Exception e) {
-                    Console.WriteLine(e.ToString());
+                    Console.WriteLine(e.Message);
                     return "Failed to read from database";
                 }
                 
@@ -140,7 +140,7 @@ namespace WebAPI.CustomClasses
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e.ToString());
+                    Console.WriteLine(e.Message);
                     return;
                 }
             }
@@ -157,7 +157,7 @@ namespace WebAPI.CustomClasses
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e.ToString());
+                    Console.WriteLine(e.Message);
                     return "FAILED Database Deletion";
                 }
                 return "Deleted Successfully";
