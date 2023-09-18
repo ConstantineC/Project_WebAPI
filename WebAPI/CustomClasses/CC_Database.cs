@@ -128,11 +128,6 @@ namespace WebAPI.CustomClasses
             {
                 try
                 {
-                    if (capital == "")
-                        capital = "None";
-                    if (borders == "")
-                        borders = "None";
-
                     country = country.Replace("'", "''");
                     capital = capital.Replace("'", "''");
 

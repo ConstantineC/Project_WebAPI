@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.Data.SqlClient;
+using Microsoft.IdentityModel.Tokens;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics.Metrics;
@@ -29,13 +30,14 @@ namespace WebAPI.Controllers
             if (sqlCommand == null)
                 return "FAILED TO CONNECT TO SQL SERVER";
 
-            //if database doesnt exist
+            //if database exists
             if (DB_Handler.DatabaseExists(sqlCommand, _DatabaseName))
             {
                 Console.WriteLine("Got data from DB");
+                string result_string= DB_Handler.GetAllRows(sqlCommand, _DatabaseName);
                 //close connection with the sql server
                 DB_Handler.CloseConnection(sqlConnection);
-                return DB_Handler.GetAllRows(sqlCommand, _DatabaseName);
+                return result_string;
             }
 
             //create json handler 
@@ -50,17 +52,18 @@ namespace WebAPI.Controllers
             JsonDocument jObject=RQ_Handler.GetJsonBody_FromURL(url);
 
             string return_string = "";
-
-            //if connection established begin json parsing and db insertion   
-            //for each country
             int current_id = 0;
+
+            //foreach country
             foreach (var item in jObject.RootElement.EnumerateArray())
             {
-
                 //parse json for the properties in need
                 string country_commonName = item.GetProperty("name").GetProperty("common").ToString();
                 string country_capitals = JS_Handler.GetListedItems(item, "capital");
                 string country_borders = JS_Handler.GetListedItems(item, "borders");
+
+                if (country_capitals.IsNullOrEmpty()) country_capitals = "None";
+                if (country_borders.IsNullOrEmpty()) country_borders = "None";
 
                 //add to the string
                 return_string += current_id+" Country: " + country_commonName + " / " +
