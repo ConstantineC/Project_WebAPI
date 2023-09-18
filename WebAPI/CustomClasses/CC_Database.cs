@@ -38,9 +38,11 @@ namespace WebAPI.CustomClasses
 
                     //table creation command
                     cmd.CommandText = "CREATE TABLE " + databaseName + ".dbo.Countries (" +
-                        "CommonName varchar(255)," +
+                        "ID int NOT NULL," +
+                        "CommonName varchar(255) NOT NULL," +
                         "Capital varchar(255)," +
-                        "Borders varchar(255));";
+                        "Borders varchar(255)," +
+                        "PRIMARY KEY (ID));";
                     cmd.ExecuteNonQuery();
 
                 }
@@ -87,31 +89,29 @@ namespace WebAPI.CustomClasses
                 return exists;
             }
             
-            public void InsertRow(string new_country,string capital,string borders,string databaseName)
+            public void InsertRow(string databaseName,SqlCommand cmd,int id,string country,string capital,string borders)
             {
-                // Creating instance of SqlConnection  
-                SqlConnection conn = new SqlConnection("Server=localhost;Integrated security=SSPI;TrustServerCertificate=True");
-                SqlCommand cmd = new SqlCommand();// Creating instance of SqlCommand  
-                cmd.Connection = conn; // set the connection to instance of SqlCommand  
                 try
                 {
-                    if (conn.State == ConnectionState.Closed)
-                        conn.Open();
+                    if (capital == "")
+                        capital = "None";
+                    if (borders == "")
+                        borders = "None";
+
+                    country = country.Replace("'", "''");
+                    capital = capital.Replace("'", "''");
 
                     //insert new row
-                    cmd.CommandText = "INSERT INTO " + databaseName + ".dbo.Countries(CommonName,Capital,Borders)" +
-                        "VALUES('" + new_country + "','" + capital + "','" + borders + "'); ";
+                    cmd.CommandText = "INSERT INTO " + databaseName + ".dbo.Countries(ID,CommonName,Capital,Borders)" +
+                        "VALUES('"+id+"','" + country + "' , '" + capital + "' , '" + borders + "');";
+
+                    //Console.WriteLine(cmd.CommandText);
                     cmd.ExecuteNonQuery();
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine(e.ToString());
                     return;
-                }
-                finally
-                {
-                    if (conn.State == ConnectionState.Closed)
-                        conn.Close();
                 }
             }
         }
