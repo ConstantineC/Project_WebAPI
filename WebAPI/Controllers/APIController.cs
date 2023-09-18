@@ -26,7 +26,6 @@ namespace WebAPI.Controllers
         public string Get()
         {
             CC_Cache.CacheHandler Cache_Handler = new CC_Cache.CacheHandler();
-
             ObjectCache cache = MemoryCache.Default;
 
             CC_Cache.CacheObject currentObj = cache.Get(_CacheKey) as CC_Cache.CacheObject;
@@ -54,6 +53,7 @@ namespace WebAPI.Controllers
                 //close connection with the sql server
                 DB_Handler.CloseConnection(sqlConnection);
 
+                //add to cache
                 Cache_Handler.AddContent(cache, _CacheKey, result_string, _CacheExpirationAmount);
 
                 return "DB\n" + result_string;
@@ -64,17 +64,19 @@ namespace WebAPI.Controllers
             //create requests handler 
             CC_Requests.RequestHandler RQ_Handler = new CC_Requests.RequestHandler();
 
+            //create new database
             DB_Handler.CreateDatabase(_DatabaseName, sqlCommand);
             Console.WriteLine("Created new DB");
 
+            //http call for the data
             string url = "https://restcountries.com/v3.1/all";
             JsonDocument jObject=RQ_Handler.GetJsonBody_FromURL(url);
             if (jObject == null)
                 return "ERROR on HTTP call";
 
+
             string return_string = "";
             int current_id = 0;
-
             //foreach country
             foreach (var item in jObject.RootElement.EnumerateArray())
             {
@@ -109,13 +111,18 @@ namespace WebAPI.Controllers
         [HttpPost]
         public IActionResult Post([FromBody] CC_Requests.RequestObj BodyObj)
         {
+            //if empty body or smaller than the position wanted
             if (!BodyObj.ReqeustArrayObj.Any() || BodyObj.ReqeustArrayObj.Count() == 1)
                 return BadRequest("ERROR:Invalid Body");
 
+            //return the largest number depending on position given
             CC_Requests.RequestHandler RQ_Handler = new CC_Requests.RequestHandler();
             return Ok(RQ_Handler.GetMax_AtPosition(BodyObj, 1));
         }
 
+
+        //delete function used to clear database and connection with it 
+        //used to test the functionality of cache-db-http call system
         [HttpDelete]
         public string Delete()
         {
