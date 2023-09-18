@@ -38,10 +38,9 @@ namespace WebAPI.CustomClasses
 
                     //table creation command
                     cmd.CommandText = "CREATE TABLE " + databaseName + ".dbo.Countries (" +
-                        "CommonName varchar(255)" +
-                        "Capital varchar(255)" +
-                        "Borders varchar(255)" +
-                        ");";
+                        "CommonName varchar(255)," +
+                        "Capital varchar(255)," +
+                        "Borders varchar(255));";
                     cmd.ExecuteNonQuery();
 
                 }
@@ -96,7 +95,7 @@ namespace WebAPI.CustomClasses
                 cmd.Connection = conn; // set the connection to instance of SqlCommand  
                 try
                 {
-                    if (conn.State == ConnectionState.Open)
+                    if (conn.State == ConnectionState.Closed)
                         conn.Open();
 
                     //insert new row

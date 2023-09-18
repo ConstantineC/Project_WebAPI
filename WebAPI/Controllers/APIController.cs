@@ -38,7 +38,7 @@ namespace WebAPI.Controllers
                     "Capital(s): " + country_capitals + " / " +
                     "Bordering Countries: " + country_borders + "\n";
 
-                DB_Handler.InsertRow(country_commonName, country_capitals,country_borders, databaseName);
+                //DB_Handler.InsertRow(country_commonName, country_capitals,country_borders, databaseName);
             }
 
             return return_string;
