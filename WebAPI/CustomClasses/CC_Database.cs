@@ -50,14 +50,9 @@ namespace WebAPI.CustomClasses
                 return databaseDirectory;
             }
 
-            public void CreateDatabase(string directoryPath, string databaseName,SqlCommand cmd)
-            {  
-
-                //if db doesnt exist
-                if (DatabaseExists(cmd,databaseName))
-                    return;
-                
-                //Console.WriteLine(cmd.CommandText);
+            public void CreateDatabase(string databaseName,SqlCommand cmd)
+            {
+                string directoryPath = GetDatabaseDirectory();
                 try
                 {
                     //database creation command
@@ -103,6 +98,32 @@ namespace WebAPI.CustomClasses
                 return exists;
             }
             
+            public string GetAllRows(SqlCommand cmd, string databaseName)
+            {
+                try
+                {
+                    //Check if db exists
+                    cmd.CommandText = "Select * From " + databaseName + ".dbo.Countries";
+                    SqlDataReader reader = cmd.ExecuteReader();
+                    string return_string = "";
+                    while (reader.Read())
+                    {
+
+                        //add to the string
+                        return_string += reader["ID"] + " Country: " + reader["CommonName"] + " / " +
+                            "Capital(s): " + reader["Capital"] + " / " +
+                            "Bordering Countries: " + reader["Borders"] + "\n";
+                    }
+                    reader.Close();
+                    return return_string;
+                }
+                catch(Exception e) {
+                    Console.WriteLine(e.ToString());
+                    return "Failed to read from database";
+                }
+                
+            }
+
             public void InsertRow(string databaseName,SqlCommand cmd,int id,string country,string capital,string borders)
             {
                 try

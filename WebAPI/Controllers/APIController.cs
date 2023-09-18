@@ -29,21 +29,25 @@ namespace WebAPI.Controllers
             if (sqlCommand == null)
                 return "FAILED TO CONNECT TO SQL SERVER";
 
-            //path and name of db
-            string databaseDirectory = DB_Handler.GetDatabaseDirectory();
-
-            //create db if it doesnt exist
-            DB_Handler.CreateDatabase(databaseDirectory, _DatabaseName,sqlCommand);
-
-            //get all data necessary from the url
-            HttpClient client = new HttpClient();
-            var url = "https://restcountries.com/v3.1/all";
-
-            var result = client.GetAsync(url).Result;
-            var jObject = JsonDocument.Parse(result.Content.ReadAsStringAsync().Result);
+            //if database doesnt exist
+            if (DB_Handler.DatabaseExists(sqlCommand, _DatabaseName))
+            {
+                Console.WriteLine("Got data from DB");
+                //close connection with the sql server
+                DB_Handler.CloseConnection(sqlConnection);
+                return DB_Handler.GetAllRows(sqlCommand, _DatabaseName);
+            }
 
             //create json handler 
             CC_Json.JsonHandler JS_Handler = new CC_Json.JsonHandler();
+            //create requests handler 
+            CC_Requests.RequestHandler RQ_Handler = new CC_Requests.RequestHandler();
+
+            DB_Handler.CreateDatabase(_DatabaseName, sqlCommand);
+            Console.WriteLine("Created new DB");
+
+            string url = "https://restcountries.com/v3.1/all";
+            JsonDocument jObject=RQ_Handler.GetJsonBody_FromURL(url);
 
             string return_string = "";
 

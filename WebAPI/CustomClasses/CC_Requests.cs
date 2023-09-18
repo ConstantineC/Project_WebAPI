@@ -1,4 +1,6 @@
-﻿namespace WebAPI.CustomClasses
+﻿using System.Text.Json;
+
+namespace WebAPI.CustomClasses
 {
     public class CC_Requests
     {
@@ -24,6 +26,15 @@
                 return answer;
             }
 
+            public JsonDocument GetJsonBody_FromURL(string url)
+            {
+                //Open new client and get data
+                HttpClient client = new HttpClient();
+                
+                var result = client.GetAsync(url).Result;
+                JsonDocument jObject = JsonDocument.Parse(result.Content.ReadAsStringAsync().Result);
+                return jObject;
+            }
         }
     }
 }
