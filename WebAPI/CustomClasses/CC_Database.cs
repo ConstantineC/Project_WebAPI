@@ -7,6 +7,42 @@ namespace WebAPI.CustomClasses
     {
         public class DatabaseHandler
         {
+            public SqlCommand EstablishConnection(SqlConnection conn)
+            {
+                SqlCommand sqlCommand = new SqlCommand();
+                sqlCommand.Connection = conn;
+                try
+                {
+                    if (conn.State == ConnectionState.Closed)
+                    {
+                        conn.Open();
+                        Console.WriteLine("Opened Connection");
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.ToString());
+                    return null;
+                }
+                return sqlCommand;
+            }
+
+            public void CloseConnection(SqlConnection conn)
+            {
+                try
+                {
+                    if (conn.State == ConnectionState.Open)
+                    {
+                        conn.Close();
+                        Console.WriteLine("Closed Connection");
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.ToString());
+                }
+            }
+
             public string GetDatabaseDirectory()
             {
                 string databaseDirectory = Environment.CurrentDirectory + "\\Databases\\";
@@ -14,22 +50,16 @@ namespace WebAPI.CustomClasses
                 return databaseDirectory;
             }
 
-            public void CreateDatabase(string directoryPath, string databaseName)
+            public void CreateDatabase(string directoryPath, string databaseName,SqlCommand cmd)
             {  
-                SqlConnection conn = new SqlConnection("Server=localhost;Integrated security=SSPI;TrustServerCertificate=True");
-                SqlCommand cmd = new SqlCommand();
-                cmd.Connection = conn;
 
                 //if db doesnt exist
-                if (DatabaseExists(conn,cmd,databaseName))
+                if (DatabaseExists(cmd,databaseName))
                     return;
                 
                 //Console.WriteLine(cmd.CommandText);
                 try
                 {
-                    if(conn.State==ConnectionState.Closed)
-                        conn.Open();
-
                     //database creation command
                     cmd.CommandText = "CREATE DATABASE " + databaseName + " ON PRIMARY " +
                         "(NAME = " + databaseName + "_Data, " +
@@ -44,47 +74,31 @@ namespace WebAPI.CustomClasses
                         "Borders varchar(255)," +
                         "PRIMARY KEY (ID));";
                     cmd.ExecuteNonQuery();
-
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine(ex.ToString());
                 }
-                finally
-                {
-                    //close connection
-                    if (conn.State == ConnectionState.Open)
-                    {
-                        conn.Close();
-                        Console.WriteLine("Closed");
-                    }
-                }
             }
 
-            private bool DatabaseExists(SqlConnection conn,SqlCommand cmd,string databaseName)
+            public bool DatabaseExists(SqlCommand cmd,string databaseName)
             {
                 bool exists = false;
                 try
                 {
-                    if (conn.State == ConnectionState.Closed)
-                        conn.Open();
                     //Check if db exists
                     cmd.CommandText = "Select name From dbo.sysdatabases where  name='" + databaseName + "'";
                     SqlDataReader reader = cmd.ExecuteReader();
                     if (reader.Read())
                     {
                         exists = true;
-                        Console.WriteLine("Database already exists");
+                        Console.WriteLine("Database exists");
                     }
+                    reader.Close();
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine(e.ToString());
-                }
-                finally
-                {
-                    if (conn.State == ConnectionState.Open)
-                        conn.Close();
                 }
                 return exists;
             }
@@ -114,6 +128,26 @@ namespace WebAPI.CustomClasses
                     return;
                 }
             }
+
+            public string DeleteDatabase(SqlCommand cmd, string databaseName)
+            {
+                try
+                {
+                    cmd.CommandText = "ALTER DATABASE " + databaseName + " SET SINGLE_USER WITH ROLLBACK IMMEDIATE;" +
+                        "DROP DATABASE[" + databaseName + "]";
+
+                    //Console.WriteLine(cmd.CommandText);
+                    cmd.ExecuteNonQuery();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.ToString());
+                    return "FAILED Database Deletion";
+                }
+                return "Deleted Successfully";
+            }
         }
+
+
     }
 }

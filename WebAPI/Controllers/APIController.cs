@@ -1,7 +1,10 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.Data.SqlClient;
+using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics.Metrics;
 using System.Text.Json;
 using WebAPI.CustomClasses;
 
@@ -11,20 +14,26 @@ namespace WebAPI.Controllers
     [ApiController]
     public class APIController : Controller
     {
+        private string _DatabaseName = "MyDB";
+
         [HttpGet]
         public string Get()
         {
-
-            //initialize database
             //create db handler
             CC_Database.DatabaseHandler DB_Handler = new CC_Database.DatabaseHandler();
 
+            //establish connection with server
+            SqlConnection sqlConnection = new SqlConnection("Server=localhost;Integrated security=SSPI;TrustServerCertificate=True");
+            SqlCommand sqlCommand = DB_Handler.EstablishConnection(sqlConnection);
+
+            if (sqlCommand == null)
+                return "FAILED TO CONNECT TO SQL SERVER";
+
             //path and name of db
             string databaseDirectory = DB_Handler.GetDatabaseDirectory();
-            string databaseName = "MyDB";
 
             //create db if it doesnt exist
-            DB_Handler.CreateDatabase(databaseDirectory, databaseName);
+            DB_Handler.CreateDatabase(databaseDirectory, _DatabaseName,sqlCommand);
 
             //get all data necessary from the url
             HttpClient client = new HttpClient();
@@ -38,46 +47,29 @@ namespace WebAPI.Controllers
 
             string return_string = "";
 
-            // Establish Connection with SQL SERVER
-            SqlConnection conn = new SqlConnection("Server=localhost;Integrated security=SSPI;TrustServerCertificate=True");
-            SqlCommand cmd = new SqlCommand();
-            cmd.Connection = conn;
-            try
+            //if connection established begin json parsing and db insertion   
+            //for each country
+            int current_id = 0;
+            foreach (var item in jObject.RootElement.EnumerateArray())
             {
-                if (conn.State == ConnectionState.Closed)
-                    conn.Open();
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e.ToString());
-                return "FAILED SQL SERVER CONNECTION";
-            }
-            finally
-            {
-                //if connection established begin json parsing and db insertion   
-                //for each country
-                int current_id = 0;
-                foreach (var item in jObject.RootElement.EnumerateArray())
-                {
 
-                    //parse json for the properties in need
-                    string country_commonName = item.GetProperty("name").GetProperty("common").ToString();
-                    string country_capitals = JS_Handler.GetListedItems(item, "capital");
-                    string country_borders = JS_Handler.GetListedItems(item, "borders"); ;
+                //parse json for the properties in need
+                string country_commonName = item.GetProperty("name").GetProperty("common").ToString();
+                string country_capitals = JS_Handler.GetListedItems(item, "capital");
+                string country_borders = JS_Handler.GetListedItems(item, "borders");
 
-                    //add to the string
-                    return_string += current_id+" Country: " + country_commonName + " / " +
-                        "Capital(s): " + country_capitals + " / " +
-                        "Bordering Countries: " + country_borders + "\n";
+                //add to the string
+                return_string += current_id+" Country: " + country_commonName + " / " +
+                    "Capital(s): " + country_capitals + " / " +
+                    "Bordering Countries: " + country_borders + "\n";
 
-                    //insert current country's properties
-                    DB_Handler.InsertRow(databaseName,cmd, current_id, country_commonName, country_capitals, country_borders);
-                    current_id++;
-                }
-                //close the SQL SERVER Connection
-                if (conn.State == ConnectionState.Closed)
-                    conn.Close();
+                //insert current country's properties
+                DB_Handler.InsertRow(_DatabaseName, sqlCommand, current_id, country_commonName, country_capitals, country_borders);
+                current_id++;
             }
+
+            //close connection with the sql server
+            DB_Handler.CloseConnection(sqlConnection);
             return return_string;
         }
 
@@ -92,9 +84,27 @@ namespace WebAPI.Controllers
             return Ok(RQ_Handler.GetMax_AtPosition(BodyObj, 1));
         }
 
-        //public string ClearDB()
-        //{
-        //    return "None";
-        //}
+        [HttpDelete]
+        public string Delete()
+        {
+
+            //create db handler
+            CC_Database.DatabaseHandler DB_Handler = new CC_Database.DatabaseHandler();
+
+            //establish connection with server
+            SqlConnection sqlConnection = new SqlConnection("Server=localhost;Integrated security=SSPI;TrustServerCertificate=True");
+            SqlCommand sqlCommand = DB_Handler.EstablishConnection(sqlConnection);
+
+            string deletionResult;
+            //if db doesnt exist
+            if (DB_Handler.DatabaseExists(sqlCommand, _DatabaseName))
+                deletionResult = DB_Handler.DeleteDatabase(sqlCommand, _DatabaseName);
+            else
+                deletionResult = "Database " + _DatabaseName + " doesn't exist ";
+
+            DB_Handler.CloseConnection(sqlConnection);
+
+            return deletionResult;
+        }
     }
 }
