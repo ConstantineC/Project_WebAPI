@@ -17,15 +17,56 @@ namespace WebAPI.CustomClasses
             public void CreateDatabase(string directoryPath)
             {
                 string databaseName = "MyDB";
-                // Creating instance of SqlConnection  
+                
                 SqlConnection conn = new SqlConnection("Server=localhost;Integrated security=SSPI;TrustServerCertificate=True");
-                SqlCommand cmd = new SqlCommand();// Creating instance of SqlCommand  
-                cmd.Connection = conn; // set the connection to instance of SqlCommand  
+                SqlCommand cmd = new SqlCommand();
+                cmd.Connection = conn;
 
+                //if db doesnt exist
+                if (DatabaseExists(conn,cmd,databaseName))
+                    return;
+                
+                //Console.WriteLine(cmd.CommandText);
+                try
+                {
+                    if(conn.State==ConnectionState.Closed)
+                        conn.Open();
+
+                    //database creation command
+                    cmd.CommandText = "CREATE DATABASE " + databaseName + " ON PRIMARY " +
+                        "(NAME = " + databaseName + "_Data, " +
+                         "FILENAME ='" + directoryPath + databaseName + ".mdf')";
+                    cmd.ExecuteNonQuery();
+
+                    //table creation command
+                    cmd.CommandText = "CREATE TABLE " + databaseName + ".dbo.Countries (" +
+                        "CommonName varchar(255)" +
+                        ");";
+                    cmd.ExecuteNonQuery();
+
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.ToString());
+                }
+                finally
+                {
+                    //close connection
+                    if (conn.State == ConnectionState.Open)
+                    {
+                        conn.Close();
+                        Console.WriteLine("Closed");
+                    }
+                }
+            }
+
+            private bool DatabaseExists(SqlConnection conn,SqlCommand cmd,string databaseName)
+            {
                 bool exists = false;
                 try
                 {
-                    conn.Open();
+                    if (conn.State == ConnectionState.Closed)
+                        conn.Open();
                     //Check if db exists
                     cmd.CommandText = "Select name From dbo.sysdatabases where  name='" + databaseName + "'";
                     SqlDataReader reader = cmd.ExecuteReader();
@@ -38,44 +79,17 @@ namespace WebAPI.CustomClasses
                 catch (Exception e)
                 {
                     Console.WriteLine(e.ToString());
-                    return;
-                }
-                finally
-                {
-                    conn.Close();
-                }
-
-                if (exists)
-                    return;
-                //if db doesnt exist
-                cmd.CommandText = "CREATE DATABASE " + databaseName + " ON PRIMARY " +
-                    "(NAME = " + databaseName + "_Data, " +
-                     "FILENAME ='" + directoryPath + databaseName + ".mdf')";
-
-                //Console.WriteLine(cmd.CommandText);
-                try
-                {
-                    conn.Open();
-                    cmd.ExecuteNonQuery();
-                    cmd.CommandText = "CREATE TABLE " + databaseName + ".dbo.Countries (" +
-                        "CommonName varchar(255)" +
-                        ");";
-                    cmd.ExecuteNonQuery();
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.ToString());
                 }
                 finally
                 {
                     if (conn.State == ConnectionState.Open)
-                    {
                         conn.Close();
-                        Console.WriteLine("Closed");
-                    }
                 }
+                return exists;
             }
+            
 
+            
             public void InsertRow(string new_country)
             {
                 string databaseName = "MyDB";
