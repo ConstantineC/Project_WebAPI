@@ -1,17 +1,18 @@
 ﻿using System.Runtime.Caching;
+using static WebAPI.CustomClasses.CC_Cache;
 
 namespace WebAPI.CustomClasses
 {
     public class CC_Cache
     {
+        public class CacheObject
+        {
+            public string content="";
+        }
+
         public class CacheHandler
         {
-            public MemoryCache InitializeCache(string cache_name)
-            {
-                MemoryCache cache = new MemoryCache(cache_name);
-                return cache;
-            }
-
+           
             public CacheItemPolicy GetCachePolicy(float expiration_amount)
             {
                 var cacheItemPolicy = new CacheItemPolicy
@@ -20,23 +21,27 @@ namespace WebAPI.CustomClasses
                 };
                 return cacheItemPolicy;
             }
-            public bool AddContents(MemoryCache cache, string cache_key,string addvalue,CacheItemPolicy policy)
+
+            public void AddContent(ObjectCache cache ,string cache_key,string addedContent,float expiration_amount)
             {
-                return cache.Add(cache_key, addvalue, policy);
+                //add to cache
+                CC_Cache.CacheObject savedObject = new CC_Cache.CacheObject();
+                savedObject.content = addedContent;
+
+                CacheItemPolicy policy = GetCachePolicy(expiration_amount);
+
+                try
+                {
+                    if (cache.Add(cache_key, savedObject, policy))
+                        Console.WriteLine("Succesfully added");
+                    else
+                        Console.WriteLine("Did not add");
+                }
+                catch (Exception e) { 
+                    Console.WriteLine(e.Message); 
+                }
             }
 
-            public Object GetContents(MemoryCache cache, string cache_key)
-            {
-                var result=cache.Get(cache_key);
-                return result;
-            }
-
-            public bool RemoveContents(MemoryCache cache,string cache_key)
-            {
-                if (cache.Remove(cache_key) == null)
-                    return false;
-                return true;
-            }
         }
     }
 }

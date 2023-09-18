@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.Data.SqlClient;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.IdentityModel.Tokens;
 using System.Collections.Generic;
 using System.Data;
@@ -10,6 +9,7 @@ using System.Diagnostics.Metrics;
 using System.Runtime.Caching;
 using System.Text.Json;
 using WebAPI.CustomClasses;
+
 
 namespace WebAPI.Controllers
 {
@@ -20,48 +20,24 @@ namespace WebAPI.Controllers
         private string _DatabaseName = "MyDB";
         private readonly string _CacheName ="CountriesCache";
         private readonly string _CacheKey ="CountriesCacheKey";
+        private float _CacheExpirationAmount = 10;
 
         [HttpGet]
         public string Get()
         {
             CC_Cache.CacheHandler Cache_Handler = new CC_Cache.CacheHandler();
 
-            var cache = Cache_Handler.InitializeCache(_CacheName);
+            ObjectCache cache = MemoryCache.Default;
 
-            Object content = Cache_Handler.GetContents(cache, _CacheKey);
-            if (content == null)
+            CC_Cache.CacheObject currentObj = cache.Get(_CacheKey) as CC_Cache.CacheObject;
+            if (currentObj == null)
                 Console.WriteLine("Empty cache");
             else
-                content.ToString();
-
-            CacheItemPolicy policy = Cache_Handler.GetCachePolicy(10);
-
-            if (Cache_Handler.AddContents(cache,_CacheKey,"test", policy))
-                Console.WriteLine("Succesfully added");
-
-            content = Cache_Handler.GetContents(cache, _CacheKey);
-            if (content == null)
-                Console.WriteLine("Empty cache");
-            else
-                content.ToString();
-
-            Cache_Handler.RemoveContents(cache, _CacheKey);
-
-            content = Cache_Handler.GetContents(cache, _CacheKey);
-            if (content == null)
-                Console.WriteLine("Empty cache");
-            else
-                content.ToString();
-
-            return "Cache testing";
-            //place cache here
-            //################
-            //################
-            //################
-
+                return "Cache\n"+currentObj.content;
 
             //create db handler
             CC_Database.DatabaseHandler DB_Handler = new CC_Database.DatabaseHandler();
+
             //establish connection with server
             SqlConnection sqlConnection = new SqlConnection("Server=localhost;Integrated security=SSPI;TrustServerCertificate=True");
             SqlCommand sqlCommand = DB_Handler.EstablishConnection(sqlConnection);
@@ -75,14 +51,12 @@ namespace WebAPI.Controllers
                 Console.WriteLine("Got data from DB");
                 string result_string= DB_Handler.GetAllRows(sqlCommand, _DatabaseName);
 
-                //place cache here
-                //################
-                //################
-                //################
-
                 //close connection with the sql server
                 DB_Handler.CloseConnection(sqlConnection);
-                return result_string;
+
+                Cache_Handler.AddContent(cache, _CacheKey, result_string, _CacheExpirationAmount);
+
+                return "DB\n" + result_string;
             }
 
             //create json handler 
@@ -120,17 +94,15 @@ namespace WebAPI.Controllers
                 //insert current country's properties
                 DB_Handler.InsertRow(_DatabaseName, sqlCommand, current_id, country_commonName, country_capitals, country_borders);
 
-                //place cache here
-                //################
-                //################
-                //################
-
                 current_id++;
             }
 
             //close connection with the sql server
             DB_Handler.CloseConnection(sqlConnection);
-            return return_string;
+
+            //add result to cache
+            Cache_Handler.AddContent(cache, _CacheKey, return_string, _CacheExpirationAmount);
+            return "HTTP Call\n" +return_string;
         }
 
         // POST api/<TestController>
