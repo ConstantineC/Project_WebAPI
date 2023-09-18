@@ -16,7 +16,9 @@ namespace WebAPI.Controllers
             //initialize database
             CC_Database.DatabaseHandler DB_Handler = new CC_Database.DatabaseHandler();
             string databaseDirectory = DB_Handler.GetDatabaseDirectory();
-            DB_Handler.CreateDatabase(databaseDirectory);
+            string databaseName = "MyDB";
+
+            DB_Handler.CreateDatabase(databaseDirectory, databaseName);
 
             HttpClient client = new HttpClient();
             var url = "https://restcountries.com/v3.1/all";
@@ -36,7 +38,7 @@ namespace WebAPI.Controllers
                     "Capital(s): " + country_capitals + " / " +
                     "Bordering Countries: " + country_borders + "\n";
 
-                DB_Handler.InsertRow(country_commonName);
+                DB_Handler.InsertRow(country_commonName, country_capitals,country_borders, databaseName);
             }
 
             return return_string;

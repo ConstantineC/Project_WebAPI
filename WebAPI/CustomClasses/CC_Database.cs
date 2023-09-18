@@ -14,10 +14,8 @@ namespace WebAPI.CustomClasses
                 return databaseDirectory;
             }
 
-            public void CreateDatabase(string directoryPath)
-            {
-                string databaseName = "MyDB";
-                
+            public void CreateDatabase(string directoryPath, string databaseName)
+            {  
                 SqlConnection conn = new SqlConnection("Server=localhost;Integrated security=SSPI;TrustServerCertificate=True");
                 SqlCommand cmd = new SqlCommand();
                 cmd.Connection = conn;
@@ -41,6 +39,8 @@ namespace WebAPI.CustomClasses
                     //table creation command
                     cmd.CommandText = "CREATE TABLE " + databaseName + ".dbo.Countries (" +
                         "CommonName varchar(255)" +
+                        "Capital varchar(255)" +
+                        "Borders varchar(255)" +
                         ");";
                     cmd.ExecuteNonQuery();
 
@@ -88,21 +88,20 @@ namespace WebAPI.CustomClasses
                 return exists;
             }
             
-
-            
-            public void InsertRow(string new_country)
+            public void InsertRow(string new_country,string capital,string borders,string databaseName)
             {
-                string databaseName = "MyDB";
                 // Creating instance of SqlConnection  
                 SqlConnection conn = new SqlConnection("Server=localhost;Integrated security=SSPI;TrustServerCertificate=True");
                 SqlCommand cmd = new SqlCommand();// Creating instance of SqlCommand  
                 cmd.Connection = conn; // set the connection to instance of SqlCommand  
                 try
                 {
-                    conn.Open();
-                    //Check if db exists
-                    cmd.CommandText = "INSERT INTO " + databaseName + ".dbo.Countries(CommonName)" +
-                        "VALUES('" + new_country + "'); ";
+                    if (conn.State == ConnectionState.Open)
+                        conn.Open();
+
+                    //insert new row
+                    cmd.CommandText = "INSERT INTO " + databaseName + ".dbo.Countries(CommonName,Capital,Borders)" +
+                        "VALUES('" + new_country + "','" + capital + "','" + borders + "'); ";
                     cmd.ExecuteNonQuery();
                 }
                 catch (Exception e)
@@ -112,7 +111,8 @@ namespace WebAPI.CustomClasses
                 }
                 finally
                 {
-                    conn.Close();
+                    if (conn.State == ConnectionState.Closed)
+                        conn.Close();
                 }
             }
         }
