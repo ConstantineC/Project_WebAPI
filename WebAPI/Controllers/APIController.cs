@@ -61,8 +61,6 @@ namespace WebAPI.Controllers
 
             //create json handler 
             CC_Json.JsonHandler JS_Handler = new CC_Json.JsonHandler();
-            //create requests handler 
-            CC_Requests.RequestHandler RQ_Handler = new CC_Requests.RequestHandler();
 
             //create new database
             DB_Handler.CreateDatabase(_DatabaseName, sqlCommand);
@@ -70,7 +68,7 @@ namespace WebAPI.Controllers
 
             //http call for the data
             string url = "https://restcountries.com/v3.1/all";
-            JsonDocument jObject=RQ_Handler.GetJsonBody_FromURL(url);
+            JsonDocument jObject= JS_Handler.GetJsonBody_FromURL(url);
             if (jObject == null)
                 return "ERROR on HTTP call";
 

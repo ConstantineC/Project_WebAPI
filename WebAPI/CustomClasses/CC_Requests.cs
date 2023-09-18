@@ -25,23 +25,6 @@ namespace WebAPI.CustomClasses
                 var answer = obj.ReqeustArrayObj.OrderByDescending(x => x).Skip(position).FirstOrDefault();
                 return answer;
             }
-
-            public JsonDocument GetJsonBody_FromURL(string url)
-            {
-                try
-                {
-                    //Open new client and get data
-                    HttpClient client = new HttpClient();
-
-                    var result = client.GetAsync(url).Result;
-                    JsonDocument jObject = JsonDocument.Parse(result.Content.ReadAsStringAsync().Result);
-                    return jObject;
-                }
-                catch (Exception ex) { 
-                    Console.WriteLine(ex.Message);
-                    return null;
-                }
-            }
         }
     }
 }
