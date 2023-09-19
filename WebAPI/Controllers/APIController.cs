@@ -25,6 +25,7 @@ namespace WebAPI.Controllers
         [HttpGet]
         public string Get()
         {
+            //initialize cache
             CC_Cache.CacheHandler Cache_Handler = new CC_Cache.CacheHandler();
             ObjectCache cache = MemoryCache.Default;
 
